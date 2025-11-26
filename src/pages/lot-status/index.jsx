@@ -1,31 +1,59 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Car, CheckCircle2, XCircle, Clock } from 'lucide-react';
+import { Car, CheckCircle2, XCircle, Clock, Wifi, WifiOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import api from '@/services/api';
-
-
-
+import useMqtt from '@/providers/useMqtt';
 
 export default function LotStatusPage() {
   const [lotData, setLotData] = useState([]);
   const [lastUpdate, setLastUpdate] = useState(new Date());
+  const initialLoadDone = useRef(false);
+  const { subscribe, connected: mqttConnected } = useMqtt();
 
-  // Load data ban đầu và cập nhật mỗi 30 giây
+  // Load data ban đầu từ API và sau đó kết nối MQTT
   useEffect(() => {
-    const loadData = async () => {
-      const res = await api.get('/parking-lot');
-      setLotData(res.data.data);
-      console.log('Fetched lot data:', res.data.data);
-      setLastUpdate(new Date());
+    const loadInitialData = async () => {
+      try {
+        const res = await api.get('/parking-lot');
+        setLotData(res.data.data);
+        console.log('Fetched initial lot data:', res.data.data);
+  setLastUpdate(new Date());
+  initialLoadDone.current = true;
+      } catch (error) {
+        console.error('Error loading initial data:', error);
+      }
     };
 
-    loadData();
-    const interval = setInterval(loadData, 30000); 
-
-    return () => clearInterval(interval);
+    loadInitialData();
   }, []);
+
+  // Subscribe to MQTT updates after initial API load
+  useEffect(() => {
+    if (!initialLoadDone.current) return;
+    if (!subscribe) return;
+
+    const unsubscribe = subscribe('parking/status', (message) => {
+      try {
+        const payload = JSON.parse(message);
+        // Update lotData according to payload
+        setLotData(prevData => prevData.map(lot => {
+          if (Object.prototype.hasOwnProperty.call(payload, lot.lot_name)) {
+            return { ...lot, is_available: payload[lot.lot_name] };
+          }
+          return lot;
+        }));
+        setLastUpdate(new Date());
+      } catch (err) {
+        console.error('Error parsing MQTT message', err);
+      }
+    });
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, [subscribe]);
 
   const leftLots = lotData.filter(lot => lot.lot_name.startsWith('A'));
 	leftLots.sort((a, b) => a.lot_name.localeCompare(b.lot_name));
@@ -90,9 +118,24 @@ export default function LotStatusPage() {
             Theo dõi tình trạng các lot xe trong thời gian thực
           </p>
         </div>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Clock className="h-4 w-4" />
-          <span>Cập nhật lúc: {lastUpdate.toLocaleTimeString('vi-VN')}</span>
+        <div className="flex flex-col items-end gap-2">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Clock className="h-4 w-4" />
+            <span>Cập nhật lúc: {lastUpdate.toLocaleTimeString('vi-VN')}</span>
+          </div>
+          <div className="flex items-center gap-2 text-sm">
+            {mqttConnected ? (
+              <>
+                <Wifi className="h-4 w-4 text-green-600" />
+                <span className="text-green-600 font-medium">MQTT Connected</span>
+              </>
+            ) : (
+              <>
+                <WifiOff className="h-4 w-4 text-gray-400" />
+                <span className="text-gray-400">Connecting...</span>
+              </>
+            )}
+          </div>
         </div>
       </div>
 

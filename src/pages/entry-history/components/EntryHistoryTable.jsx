@@ -25,6 +25,10 @@ export default function EntryHistoryTable({ currentData, startIndex, onViewDetai
   };
 
   const getPaymentStatus = (record) => {
+    // Nếu là vé tháng, luôn hiển thị là đã thanh toán
+    if (record.bill && record.bill.bill_type === 'monthly') {
+      return { status: 'monthly', label: 'Vé tháng', variant: 'default' };
+    }
     if (record.bill && record.bill.is_paid) {
       return { status: 'paid', label: 'Đã thanh toán', variant: 'success' };
     }

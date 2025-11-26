@@ -17,7 +17,8 @@ import {
   Image as ImageIcon,
   ExternalLink,
   Banknote,
-  Receipt
+  Receipt,
+  Ticket
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
@@ -31,6 +32,10 @@ export default function EntryHistoryDetailDialog({ record, open, onOpenChange })
   };
 
   const getPaymentStatus = (record) => {
+    // Nếu là vé tháng, luôn hiển thị là đã thanh toán
+    if (record.bill && record.bill.bill_type === 'monthly') {
+      return { status: 'monthly', label: 'Vé tháng', variant: 'default' };
+    }
     if (record.bill && record.bill.is_paid) {
       return { status: 'paid', label: 'Đã thanh toán', variant: 'success' };
     }
@@ -194,8 +199,55 @@ export default function EntryHistoryDetailDialog({ record, open, onOpenChange })
                   </div>
                 </div>
 
-                {/* Nếu chưa thanh toán - hiển thị nút thanh toán */}
-                {!record.bill.is_paid && (
+                {record.bill.description && (
+                  <div className="border-l-4 border-blue-500 pl-4 py-2 bg-blue-50 dark:bg-blue-950/20">
+                    <p className="text-sm font-medium text-muted-foreground">Mô tả</p>
+                    <p className="text-sm">{record.bill.description}</p>
+                  </div>
+                )}
+
+                {/* Hiển thị thông tin vé tháng */}
+                {record.bill.bill_type === 'monthly' && (
+                  <div className="border-2 border-blue-300 rounded-lg p-4 bg-blue-50 dark:bg-blue-950/20">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="p-2 rounded-full bg-blue-100 dark:bg-blue-900/30">
+                        <Ticket className="h-6 w-6 text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-blue-800 dark:text-blue-400 text-lg">
+                          Vé tháng
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          Đã thanh toán - Sử dụng không giới hạn
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2 bg-white dark:bg-slate-900 rounded-lg p-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-muted-foreground">Loại vé:</span>
+                        <Badge variant="default" className="bg-blue-600">
+                          Vé tháng
+                        </Badge>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-muted-foreground">Trạng thái:</span>
+                        <Badge variant="success">
+                          Đã thanh toán
+                        </Badge>
+                      </div>
+                      <div className="flex justify-between items-center pt-2 border-t">
+                        <span className="text-sm font-medium">Miễn phí đỗ xe:</span>
+                        <span className="text-sm font-bold text-blue-600">
+                          ✓ Không giới hạn
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Nếu chưa thanh toán và KHÔNG phải vé tháng - hiển thị nút thanh toán */}
+                {!record.bill.is_paid && record.bill.bill_type !== 'monthly' && (
                   <div className="border-2 border-orange-300 rounded-lg p-4 bg-orange-50 dark:bg-orange-950/20">
                     <div className="flex items-center justify-between mb-3">
                       <div>
@@ -220,8 +272,8 @@ export default function EntryHistoryDetailDialog({ record, open, onOpenChange })
                   </div>
                 )}
 
-                {/* Nếu đã thanh toán - hiển thị thông tin giao dịch */}
-                {record.bill.is_paid && (
+                {/* Nếu đã thanh toán và KHÔNG phải vé tháng - hiển thị thông tin giao dịch */}
+                {record.bill.is_paid && record.bill.bill_type !== 'monthly' && (
                   <div className="border-2 border-green-300 rounded-lg p-4 bg-green-50 dark:bg-green-950/20">
                     <div className="flex items-center justify-between mb-3">
                       <p className="font-semibold text-green-800 dark:text-green-400">

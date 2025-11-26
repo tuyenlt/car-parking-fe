@@ -20,14 +20,11 @@ export default function SignUp() {
   const navigate = useNavigate();
   const form = useForm({
     defaultValues: {
-      email: '',
-      name: '',
+      username: '',
       password: '',
-      passwordConfirm: '',
-      role: 'student',
+      plate_number: '',
     },
   });
-  const password = form.watch('password');
 
   const [loading, setLoading] = useState(false);
   const { register, isAuthenticated } = useUserContext();
@@ -42,7 +39,7 @@ export default function SignUp() {
     setLoading(true);
     try {
       console.log(data);
-      await register(data);
+      await register(data.username, data.password, data.plate_number.toLowerCase());
     } catch (err) {
       console.error(err);
     } finally {
@@ -54,13 +51,13 @@ export default function SignUp() {
     <div className="flex justify-center items-center min-h-screen bg-gray-100">
       <Card className="w-full max-w-md p-6 pt-10 pb-10 rounded-lg shadow-md">
         <CardHeader className="flex flex-col items-center space-y-1 mb-4">
-          <p className="text-sm text-muted-foreground">
-            Please enter your details
-          </p>
-          <div className="flex space-x-2 items-center self-center">
+          <div className="flex space-x-2 items-center self-center mb-2">
             <LogoSVG />
-            <CardTitle className="text-3xl font-bold">Welcome</CardTitle>
+            <CardTitle className="text-3xl font-bold">Đăng ký</CardTitle>
           </div>
+          <p className="text-sm text-muted-foreground">
+            Vui lòng điền thông tin để tạo tài khoản
+          </p>
         </CardHeader>
 
         <CardContent>
@@ -68,33 +65,20 @@ export default function SignUp() {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
                 control={form.control}
-                name="email"
-                rules={{ required: 'Email is required' }}
+                name="username"
+                rules={{ 
+                  required: 'Vui lòng nhập tên đăng nhập',
+                  minLength: {
+                    value: 3,
+                    message: 'Tên đăng nhập phải có ít nhất 3 ký tự'
+                  }
+                }}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email address</FormLabel>
+                    <FormLabel>Tên đăng nhập</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Enter your email"
-                        type="email"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="name"
-                rules={{ required: 'Name is required' }}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Full Name</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Enter your name"
-                        type="name"
+                        placeholder="Nhập tên đăng nhập"
                         {...field}
                       />
                     </FormControl>
@@ -106,13 +90,19 @@ export default function SignUp() {
               <FormField
                 control={form.control}
                 name="password"
-                rules={{ required: 'Password is required' }}
+                rules={{ 
+                  required: 'Vui lòng nhập mật khẩu',
+                  minLength: {
+                    value: 6,
+                    message: 'Mật khẩu phải có ít nhất 6 ký tự'
+                  }
+                }}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Password</FormLabel>
+                    <FormLabel>Mật khẩu</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Enter your password"
+                        placeholder="Nhập mật khẩu"
                         type="password"
                         {...field}
                       />
@@ -124,20 +114,25 @@ export default function SignUp() {
 
               <FormField
                 control={form.control}
-                name="passwordConfirm"
-                rules={{
-                  required: 'Password is required',
-                  validate: (value) =>
-                    value === password || 'Passwords do not match',
+                name="plate_number"
+                rules={{ 
+                  required: 'Vui lòng nhập biển số xe',
+                  pattern: {
+                    value: /^\d{2}[A-Z]\d{4,5}$/i,
+                    message: 'Biển số xe không hợp lệ (VD: 30A-12345)'
+                  }
                 }}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Confirm Password</FormLabel>
+                    <FormLabel>Biển số xe</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Enter your password"
-                        type="password"
+                        placeholder="VD: 30A-12345"
                         {...field}
+                        className="uppercase"
+                        onChange={(e) => {
+                          field.onChange(e.target.value.toUpperCase());
+                        }}
                       />
                     </FormControl>
                     <FormMessage />
@@ -146,13 +141,13 @@ export default function SignUp() {
               />
 
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? 'signing in...' : 'Sign up'}
+                {loading ? 'Đang xử lý...' : 'Đăng ký'}
               </Button>
 
               <p className="text-center text-sm text-muted-foreground">
-                Already have an account?{' '}
+                Đã có tài khoản?{' '}
                 <Link to="/login" className="text-blue-600 hover:underline">
-                  Sign in
+                  Đăng nhập ngay
                 </Link>
               </p>
             </form>

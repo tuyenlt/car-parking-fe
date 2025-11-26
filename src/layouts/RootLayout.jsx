@@ -18,8 +18,11 @@ export default function RootLayout() {
 							<h1 className="text-xl font-semibold">IOT16</h1>
 						</div>
 					</div>
+					<div className="flex">
 					<div className="flex font-semibold">
 						{user && user.username.toUpperCase()}
+					</div>
+						{user.plate_number? <div className="font-semibold pl-5">{user.plate_number.toUpperCase()}</div> : null}
 					</div>
         </header>
         <main className="flex flex-1 flex-col gap-4 p-4">

@@ -26,7 +26,7 @@ export default function EntryHistoryPage() {
   const fetchData = async () => {
     try {
       setIsRefreshing(true);
-      const res = await api.get(`/car-history${isAdmin ? "" : `/by-plate/${user?.username}`}`, {
+      const res = await api.get(`/car-history${isAdmin ? "" : `/by-plate/${user?.plate_number}`}`, {
 			});
 			let results = res.data.data;
 			if(!Array.isArray(results)){

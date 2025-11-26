@@ -166,9 +166,28 @@ export default function AuthContextProvider({ children }) {
 		}
 	};
 
+	const register = async (username, password, plate_number) => {
+		try {
+			await api.post('/users/register', { username, password, plate_number });
+			setIsLoggingOut(false);
+			console.log('register success');
+			navigate('/login', { replace: true });
+		} catch (error) {
+			console.error(
+				'Register failed:',
+				error.response?.data.data?.message || error.message
+			);
+			throw error;
+		}
+	}
+
   const logout = async () => {
     await api.delete('/users/logout');
     setIsLoggingOut(true);
+		setUser(null);
+		setIsAuthenticated(false);
+		setToken(null);
+		navigate('/login', { replace: true });
     try {
       await api.get('/users/is-authenticated');
     } catch (error) {
@@ -183,6 +202,7 @@ export default function AuthContextProvider({ children }) {
     isAuthenticated,
     token,
     login,
+		register,
 		loginByPlateNumber,
     logout,
     setUser,

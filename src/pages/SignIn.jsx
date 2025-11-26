@@ -89,7 +89,7 @@ export default function Signin() {
               </TabsTrigger>
               <TabsTrigger value="admin" className="flex items-center gap-2">
                 <UserCog className="h-4 w-4" />
-                Quản trị viên
+                Tài Khoản
               </TabsTrigger>
             </TabsList>
 
@@ -125,6 +125,13 @@ export default function Signin() {
                   <Button type="submit" className="w-full" disabled={loading}>
                     {loading ? 'Đang xử lý...' : 'Tra cứu'}
                   </Button>
+
+                  <p className="text-center text-sm text-muted-foreground mt-4">
+                    Chưa có tài khoản?{' '}
+                    <Link to="/signup" className="text-blue-600 hover:underline">
+                      Đăng ký ngay
+                    </Link>
+                  </p>
                 </form>
               </Form>
             </TabsContent>
@@ -191,6 +198,13 @@ export default function Signin() {
                   <Button type="submit" className="w-full" disabled={loading}>
                     {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
                   </Button>
+
+                  <p className="text-center text-sm text-muted-foreground mt-4">
+                    Chưa có tài khoản?{' '}
+                    <Link to="/signup" className="text-blue-600 hover:underline">
+                      Đăng ký ngay
+                    </Link>
+                  </p>
                 </form>
               </Form>
             </TabsContent>

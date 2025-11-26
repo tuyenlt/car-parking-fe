@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { useUserContext } from "@/providers/authContext"
-import { Home, Users, CarFront, Car, LogOut, User } from "lucide-react"
+import { Home, Users, CarFront, Car, LogOut, User, Ticket } from "lucide-react"
 import { Link } from "react-router-dom"
 
 const menuItems = [
@@ -25,16 +25,28 @@ const menuItems = [
     title: "Trạng Thái Bãi Xe",
     url: "/lot-status",
     icon: Car,
-  },
-  {
-    title: "Thanh Toán",
-    url: "/payment",
-    icon: Users,
-  },
+  }
 ]
 
 export function LeftSidebar() {
 	const { logout } = useUserContext();
+	const {user} = useUserContext();
+	if(user?.role === 'admin'){
+		if(!menuItems.find(item => item.title === "Điều Khiển")){
+			menuItems.push({
+				title: "Điều Khiển",
+				url: "/control",
+				icon: User,
+			})
+		}
+	}
+	if(user?.role === 'user' && !menuItems.find(item => item.title === "Vé Tháng")){
+		menuItems.push({
+			title: "Vé Tháng",
+			url: "/membership",
+			icon: Ticket,
+		})
+	}
 
 	const handleLogout = async () => {
 		await logout();
