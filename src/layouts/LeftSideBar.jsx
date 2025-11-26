@@ -9,7 +9,10 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import { Home, Users, CarFront, Car } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Separator } from "@/components/ui/separator"
+import { useUserContext } from "@/providers/authContext"
+import { Home, Users, CarFront, Car, LogOut, User } from "lucide-react"
 import { Link } from "react-router-dom"
 
 const menuItems = [
@@ -31,6 +34,12 @@ const menuItems = [
 ]
 
 export function LeftSidebar() {
+	const { logout } = useUserContext();
+
+	const handleLogout = async () => {
+		await logout();
+	};
+
   return (
     <Sidebar>
       <SidebarHeader>
@@ -48,7 +57,7 @@ export function LeftSidebar() {
             <SidebarMenu>
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
+                  <SidebarMenuButton size="lg" asChild>
                     <Link to={item.url}>
                       <item.icon className="h-4 w-4" />
                       <span>{item.title}</span>
@@ -62,8 +71,24 @@ export function LeftSidebar() {
       </SidebarContent>
       
       <SidebarFooter>
-        <div className="px-4 py-2 text-xs text-muted-foreground">
-          © 2025 Edu Center
+        <div className="px-3 py-2 space-y-3">
+
+          <Separator />
+
+          {/* Logout Button */}
+          <Button
+            variant="ghost"
+            className="w-full justify-start text-red-600 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20"
+            onClick={handleLogout}
+          >
+            <LogOut className="h-4 w-4 mr-2" />
+            Đăng xuất
+          </Button>
+
+          {/* Copyright */}
+          <div className="px-3 text-xs text-muted-foreground text-center">
+            © 2025 IOT16
+          </div>
         </div>
       </SidebarFooter>
     </Sidebar>

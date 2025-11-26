@@ -1,12 +1,12 @@
 import { createContext, useContext } from "react";
 
 export const AuthContext = createContext({
-    user: null,
-    isAuthenticated: false,
-    token: null,
-    login: async () => { },
-    logout: async () => { },
-    register: async () => { },
+	user: null,
+	isAuthenticated: false,
+	token: null,
+	login: async () => { },
+	loginByPlateNumber: async () => { },
+	logout: async () => { },
 });
 
 export const useAuth = () => useContext(AuthContext);

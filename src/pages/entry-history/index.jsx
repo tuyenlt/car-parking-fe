@@ -7,8 +7,10 @@ import EntryHistoryFilters from '@/pages/entry-history/components/EntryHistoryFi
 import EntryHistoryTable from '@/pages/entry-history/components/EntryHistoryTable';
 import EntryHistoryPagination from '@/pages/entry-history/components/EntryHistoryPagination';
 import EntryHistoryDetailDialog from '@/pages/entry-history/components/EntryHistoryDetailDialog';
+import { useUserContext } from '@/providers/authContext';
 
 export default function EntryHistoryPage() {
+	const {user} = useUserContext();
   const [data, setData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -18,14 +20,20 @@ export default function EntryHistoryPage() {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const itemsPerPage = 10;
+	const isAdmin = user?.role === 'admin';
 
   // Load data
   const fetchData = async () => {
     try {
       setIsRefreshing(true);
-      const res = await api.get('/car-history');
-      setData(res.data.data);
-      setFilteredData(res.data.data);
+      const res = await api.get(`/car-history${isAdmin ? "" : `/by-plate/${user?.username}`}`, {
+			});
+			let results = res.data.data;
+			if(!Array.isArray(results)){
+				results = [res.data.data];
+			}
+      setData(results);
+      setFilteredData(results);
     } catch (error) {
       console.error('Error fetching car history:', error);
     } finally {
@@ -85,11 +93,11 @@ export default function EntryHistoryPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between px-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Lịch Sử Ra Vào</h1>
           <p className="text-muted-foreground mt-1">
-            Quản lý và theo dõi lịch sử xe ra vào bãi đỗ
+            Theo dõi lịch sử xe ra vào bãi đỗ
           </p>
         </div>
         <Button 
@@ -104,13 +112,15 @@ export default function EntryHistoryPage() {
       </div>
 
       {/* Filters */}
-      <EntryHistoryFilters
+			{ isAdmin &&
+				<EntryHistoryFilters
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         paymentFilter={paymentFilter}
         setPaymentFilter={setPaymentFilter}
         filteredData={filteredData}
-      />
+				/>
+			}
 
       {/* Table */}
       <Card>

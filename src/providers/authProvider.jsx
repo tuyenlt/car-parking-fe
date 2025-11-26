@@ -18,9 +18,9 @@ export default function AuthContextProvider({ children }) {
     if (user) return;
     const fetchUser = async () => {
       try {
-        const response = await api.get('/users/me');
-        console.log(response.data);
-        setUser(response.data);
+        const response = await api.get('/users/is-authenticated');
+        console.log(response.data.data);
+        setUser(response.data.data);
         setIsAuthenticated(true);
         console.log('fetch user success');
       } catch {
@@ -103,7 +103,7 @@ export default function AuthContextProvider({ children }) {
               {},
               { withCredentials: true }
             );
-            const newAccessToken = response.data.accessToken;
+            const newAccessToken = response.data.data.accessToken;
             setToken(newAccessToken);
             api.defaults.headers.common[
               'Authorization'
@@ -134,40 +134,43 @@ export default function AuthContextProvider({ children }) {
     };
   }, []);
 
-  const login = async (email, password) => {
+  const login = async (username, password) => {
     try {
-      const response = await api.post('/users/login', { email, password });
+      const response = await api.post('/users/login', { username, password });
       setIsLoggingOut(false);
-      const accessToken = response.data.accessToken;
+      const accessToken = response.data.data.accessToken;
       console.log('login success');
       setToken(accessToken);
     } catch (error) {
       console.error(
         'Login failed:',
-        error.response?.data?.message || error.message
+        error.response?.data?.data?.message || error.message
       );
       throw error;
     }
   };
 
-  const register = async (userInfo) => {
-    try {
-      await api.post('/users', userInfo);
-      await login(userInfo.email, userInfo.password);
-    } catch (error) {
-      console.error(
-        'Registration failed:',
-        error.response?.data?.message || error.message
-      );
-      throw error;
-    }
-  };
+	const loginByPlateNumber = async (plateNumber) => {
+		try {
+			const response = await api.post('/users/login/by-plate', { plate_number: plateNumber });
+			setIsLoggingOut(false);
+			const accessToken = response.data.data.accessToken;
+			console.log('login success');
+			setToken(accessToken);
+		} catch (error) {
+			console.error(
+				'Login failed:',
+				error.response?.data.data?.message || error.message
+			);
+			throw error;
+		}
+	};
 
   const logout = async () => {
     await api.delete('/users/logout');
     setIsLoggingOut(true);
     try {
-      await api.get('/users/test-auth');
+      await api.get('/users/is-authenticated');
     } catch (error) {
       if (error.status === 401) {
         console.log('Logout successful');
@@ -180,8 +183,8 @@ export default function AuthContextProvider({ children }) {
     isAuthenticated,
     token,
     login,
+		loginByPlateNumber,
     logout,
-    register,
     setUser,
   };
 

@@ -13,20 +13,31 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useUserContext } from '@/providers/authContext';
 import { Link, useNavigate } from 'react-router-dom';
+import { Car, UserCog } from 'lucide-react';
 import LogoSVG from '@/assets/LogoSVG';
 
 export default function Signin() {
   const navigate = useNavigate();
-  const form = useForm({
+  const [activeTab, setActiveTab] = useState('plate'); // 'plate' hoặc 'admin'
+  
+  const plateForm = useForm({
     defaultValues: {
-      email: '',
+      plate_number: '',
+    },
+  });
+
+  const adminForm = useForm({
+    defaultValues: {
+      username: '',
       password: '',
     },
   });
+
   const [loading, setLoading] = useState(false);
-  const { login, isAuthenticated } = useUserContext();
+  const { login, loginByPlateNumber, isAuthenticated } = useUserContext();
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -34,10 +45,21 @@ export default function Signin() {
     }
   }, [isAuthenticated, navigate]);
 
-  const onSubmit = async (data) => {
+  const onSubmitPlate = async (data) => {
     setLoading(true);
     try {
-      await login(data.email, data.password);
+      await loginByPlateNumber(data.plate_number.toLowerCase());
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onSubmitAdmin = async (data) => {
+    setLoading(true);
+    try {
+      await login(data.username, data.password);
     } catch (err) {
       console.error(err);
     } finally {
@@ -49,86 +71,130 @@ export default function Signin() {
     <div className="flex justify-center items-center min-h-screen bg-gray-100">
       <Card className="w-full max-w-md p-6 pt-10 pb-10 rounded-lg shadow-md">
         <CardHeader className="flex flex-col items-center space-y-1 mb-4">
-          <p className="text-sm text-muted-foreground">
-            Please enter your details
-          </p>
-          <div className="flex space-x-2 items-center self-center">
+          <div className="flex space-x-2 items-center self-center mb-2">
             <LogoSVG />
-            <CardTitle className="text-3xl font-bold">Welcome back</CardTitle>
+            <CardTitle className="text-3xl font-bold">Chào mừng trở lại</CardTitle>
           </div>
+          <p className="text-sm text-muted-foreground">
+            Vui lòng nhập thông tin của bạn
+          </p>
         </CardHeader>
 
         <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="email"
-                rules={{ required: 'Email is required' }}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email address</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Enter your email"
-                        type="email"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-6">
+              <TabsTrigger value="plate" className="flex items-center gap-2">
+                <Car className="h-4 w-4" />
+                Biển số xe
+              </TabsTrigger>
+              <TabsTrigger value="admin" className="flex items-center gap-2">
+                <UserCog className="h-4 w-4" />
+                Quản trị viên
+              </TabsTrigger>
+            </TabsList>
 
-              <FormField
-                control={form.control}
-                name="password"
-                rules={{ required: 'Password is required' }}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Password</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Enter your password"
-                        type="password"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            {/* Tab Đăng nhập bằng biển số */}
+            <TabsContent value="plate">
+              <Form {...plateForm}>
+                <form onSubmit={plateForm.handleSubmit(onSubmitPlate)} className="space-y-4">
+                  <FormField
+                    control={plateForm.control}
+                    name="plate_number"
+                    rules={{ 
+                      required: 'Vui lòng nhập biển số xe',
+                      pattern: {
+                        value: /^[0-9]{2}[A-Z]?[0-9]{4,5}$/i,
+                        message: 'Biển số xe không hợp lệ (VD: 30A12345)'
+                      }
+                    }}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Biển số xe (viết liền)</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="VD: 30A12345"
+                            {...field}
+                            className="uppercase"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <Checkbox id="remember" />
-                  <Label
-                    htmlFor="remember"
-                    className="text-sm text-muted-foreground"
-                  >
-                    Remember for 30 days
-                  </Label>
-                </div>
-                <Link
-                  href="#"
-                  className="text-sm text-blue-600 hover:underline"
-                >
-                  Forgot password?
-                </Link>
-              </div>
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading ? 'Đang xử lý...' : 'Tra cứu'}
+                  </Button>
+                </form>
+              </Form>
+            </TabsContent>
 
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? 'Logging in...' : 'Login'}
-              </Button>
+            {/* Tab Đăng nhập Admin */}
+            <TabsContent value="admin">
+              <Form {...adminForm}>
+                <form onSubmit={adminForm.handleSubmit(onSubmitAdmin)} className="space-y-4">
+                  <FormField
+                    control={adminForm.control}
+                    name="username"
+                    rules={{ required: 'Vui lòng nhập tên đăng nhập' }}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Tên đăng nhập</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Nhập tên đăng nhập"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-              <p className="text-center text-sm text-muted-foreground">
-                Don't have an account?{' '}
-                <Link to="/signup" className="text-blue-600 hover:underline">
-                  Sign up
-                </Link>
-              </p>
-            </form>
-          </Form>
+                  <FormField
+                    control={adminForm.control}
+                    name="password"
+                    rules={{ required: 'Vui lòng nhập mật khẩu' }}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Mật khẩu</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Nhập mật khẩu"
+                            type="password"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox id="remember" />
+                      <Label
+                        htmlFor="remember"
+                        className="text-sm text-muted-foreground"
+                      >
+                        Ghi nhớ trong 30 ngày
+                      </Label>
+                    </div>
+                    <Link
+                      to="#"
+                      className="text-sm text-blue-600 hover:underline"
+                    >
+                      Quên mật khẩu?
+                    </Link>
+                  </div>
+
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
+                  </Button>
+                </form>
+              </Form>
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
     </div>
